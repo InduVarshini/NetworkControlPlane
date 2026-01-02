@@ -27,7 +27,6 @@ The project must read as **real network infrastructure work**, not coursework or
 
 This project is optimized for:
 
-* Network Reliability Engineering (RNE)
 * Network Infrastructure Engineering
 * Systems / Infra SWE roles
 * Recruiters skimming LinkedIn or GitHub in under 30 seconds
