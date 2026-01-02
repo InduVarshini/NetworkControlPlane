@@ -1,0 +1,17 @@
+# Core dependencies
+jinja2>=3.1.0
+pyyaml>=6.0
+mininet>=2.3.0
+
+# Network automation abstractions
+paramiko>=3.0.0
+
+# Web UI (minimal)
+flask>=2.3.0
+
+# CLI
+click>=8.1.0
+
+# Utilities
+python-dotenv>=1.0.0
+

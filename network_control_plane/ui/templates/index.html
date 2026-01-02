@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkControlPlane</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        input, button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            max-width: 400px;
+            padding: 8px;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            background: #fafafa;
+            cursor: pointer;
+        }
+        
+        input[type="file"]:hover {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+        
+        .file-upload-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .file-info {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .metrics {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .metrics pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NetworkControlPlane</h1>
+        <p style="color: #666; margin-bottom: 30px;">Centralized Network Configuration, Automation, and Observability</p>
+        
+        <!-- Topology Section -->
+        <div class="section">
+            <h2>Topology Status</h2>
+            <div id="topology-status" class="status info">Not deployed</div>
+            <div class="form-group">
+                <label for="yaml-file">YAML Desired State File:</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="yaml-file" accept=".yaml,.yml" onchange="handleFileSelect(event)">
+                    <div id="file-info" class="file-info"></div>
+                </div>
+                <button onclick="deployTopology()">Deploy</button>
+            </div>
+        </div>
+        
+        <!-- Telemetry Section -->
+        <div class="section">
+            <h2>Telemetry Collection</h2>
+            <div class="form-group">
+                <label for="telemetry-source">Source:</label>
+                <input type="text" id="telemetry-source" placeholder="h1" value="h1">
+            </div>
+            <div class="form-group">
+                <label for="telemetry-dest">Destination:</label>
+                <input type="text" id="telemetry-dest" placeholder="h2" value="h2">
+            </div>
+            <button onclick="collectTelemetry()">Collect Telemetry</button>
+            <div id="telemetry-results" class="metrics" style="display: none;"></div>
+        </div>
+        
+        <!-- Validation Section -->
+        <div class="section">
+            <h2>Network Validation</h2>
+            <div class="form-group">
+                <label for="validate-source">Source:</label>
+                <input type="text" id="validate-source" placeholder="h1" value="h1">
+            </div>
+            <div class="form-group">
+                <label for="validate-dest">Destination:</label>
+                <input type="text" id="validate-dest" placeholder="h2" value="h2">
+            </div>
+            <button onclick="validateNetwork()">Validate</button>
+            <div id="validation-results" class="metrics" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        function updateTopologyStatus() {
+            fetch('/api/topology/status')
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+                    }
+                    return r.json();
+                })
+                .then(data => {
+                    const statusDiv = document.getElementById('topology-status');
+                    if (data.status === 'running') {
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = `Topology running: ${data.nodes.length} nodes`;
+                    } else {
+                        statusDiv.className = 'status info';
+                        statusDiv.textContent = 'Topology not running';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating topology status:', error);
+                    // Don't show error in UI for status updates to avoid noise
+                });
+        }
+        
+        function handleFileSelect(event) {
+            const fileInput = event.target;
+            const fileInfo = document.getElementById('file-info');
+            
+            if (fileInput.files && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileSize = (file.size / 1024).toFixed(2); // KB
+                fileInfo.textContent = `Selected: ${file.name} (${fileSize} KB)`;
+                fileInfo.style.color = '#28a745';
+            } else {
+                fileInfo.textContent = '';
+            }
+        }
+        
+        function deployTopology() {
+            const fileInput = document.getElementById('yaml-file');
+            const statusDiv = document.getElementById('topology-status');
+            
+            // Check if file is selected
+            if (!fileInput.files || fileInput.files.length === 0) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Error: Please select a YAML file';
+                alert('Please select a YAML file to deploy');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            // Validate file type
+            if (!file.name.endsWith('.yaml') && !file.name.endsWith('.yml')) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Error: Please select a YAML file (.yaml or .yml)';
+                alert('Please select a YAML file (.yaml or .yml)');
+                return;
+            }
+            
+            // Validate file size (max 1MB)
+            const maxSize = 1024 * 1024; // 1MB
+            if (file.size > maxSize) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Error: File size exceeds 1MB limit';
+                alert('File size exceeds 1MB limit');
+                return;
+            }
+            
+            // Show loading state
+            statusDiv.className = 'status info';
+            statusDiv.textContent = 'Deploying topology...';
+            
+            // Create FormData and send file
+            const formData = new FormData();
+            formData.append('yaml_file', file);
+            
+            fetch('/api/topology/deploy', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.json().then(data => {
+                        throw new Error(data.error || `HTTP ${r.status}: ${r.statusText}`);
+                    });
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = 'Error: ' + data.error;
+                    alert('Error: ' + data.error);
+                } else {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = 'Success: ' + data.message;
+                    alert('Success: ' + data.message);
+                    updateTopologyStatus();
+                }
+            })
+            .catch(error => {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Error: ' + error.message;
+                alert('Error deploying topology: ' + error.message);
+                console.error('Deploy error:', error);
+            });
+        }
+        
+        function collectTelemetry() {
+            const source = document.getElementById('telemetry-source').value;
+            const dest = document.getElementById('telemetry-dest').value;
+            
+            fetch('/api/telemetry/collect', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({source: source, destination: dest})
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.json().then(data => {
+                        throw new Error(data.error || `HTTP ${r.status}: ${r.statusText}`);
+                    });
+                }
+                return r.json();
+            })
+            .then(data => {
+                const resultsDiv = document.getElementById('telemetry-results');
+                resultsDiv.style.display = 'block';
+                resultsDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(e => {
+                const resultsDiv = document.getElementById('telemetry-results');
+                resultsDiv.style.display = 'block';
+                resultsDiv.innerHTML = '<pre style="color: red;">Error: ' + e.message + '</pre>';
+                console.error('Telemetry collection error:', e);
+            });
+        }
+        
+        function validateNetwork() {
+            const source = document.getElementById('validate-source').value;
+            const dest = document.getElementById('validate-dest').value;
+            
+            fetch('/api/validation/validate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({source: source, destination: dest})
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.json().then(data => {
+                        throw new Error(data.error || `HTTP ${r.status}: ${r.statusText}`);
+                    });
+                }
+                return r.json();
+            })
+            .then(data => {
+                const resultsDiv = document.getElementById('validation-results');
+                resultsDiv.style.display = 'block';
+                resultsDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(e => {
+                const resultsDiv = document.getElementById('validation-results');
+                resultsDiv.style.display = 'block';
+                resultsDiv.innerHTML = '<pre style="color: red;">Error: ' + e.message + '</pre>';
+                console.error('Validation error:', e);
+            });
+        }
+        
+        // Update topology status on load
+        updateTopologyStatus();
+        setInterval(updateTopologyStatus, 5000);
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,90 @@
+# Example Network Topology with Hosts as Routers
+# This topology uses hosts as routers instead of switches for proper IP routing
+
+topology:
+  nodes:
+    - name: r1
+      type: host
+    - name: r2
+      type: host
+    - name: h1
+      type: host
+    - name: h2
+      type: host
+  
+  links:
+    - node1: h1
+      node2: r1
+      bandwidth: 100
+      delay: 1ms
+      loss: 0
+    - node1: h2
+      node2: r2
+      bandwidth: 100
+      delay: 1ms
+      loss: 0
+    - node1: r1
+      node2: r2
+      bandwidth: 10
+      delay: 5ms
+      loss: 0
+
+devices:
+  r1:
+    type: host
+    hostname: router1
+    interfaces:
+      - name: eth0
+        ip: 10.0.0.1
+        netmask: 255.255.255.0
+        description: "Link to h1"
+      - name: eth1
+        ip: 10.0.1.1
+        netmask: 255.255.255.0
+        description: "Link to r2"
+    routes:
+      - network: 10.0.2.0
+        netmask: 255.255.255.0
+        next_hop: 10.0.1.2
+  
+  r2:
+    type: host
+    hostname: router2
+    interfaces:
+      - name: eth0
+        ip: 10.0.2.1
+        netmask: 255.255.255.0
+        description: "Link to h2"
+      - name: eth1
+        ip: 10.0.1.2
+        netmask: 255.255.255.0
+        description: "Link to r1"
+    routes:
+      - network: 10.0.0.0
+        netmask: 255.255.255.0
+        next_hop: 10.0.1.1
+  
+  h1:
+    type: host
+    hostname: host1
+    interfaces:
+      - name: eth0
+        ip: 10.0.0.10
+        netmask: 255.255.255.0
+    routes:
+      - network: 10.0.2.0
+        netmask: 255.255.255.0
+        next_hop: 10.0.0.1
+  
+  h2:
+    type: host
+    hostname: host2
+    interfaces:
+      - name: eth0
+        ip: 10.0.2.10
+        netmask: 255.255.255.0
+    routes:
+      - network: 10.0.0.0
+        netmask: 255.255.255.0
+        next_hop: 10.0.2.1
+

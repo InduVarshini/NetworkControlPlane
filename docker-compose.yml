@@ -1,0 +1,19 @@
+services:
+  network-control-plane:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: network-control-plane:latest
+    container_name: ncp-container
+    privileged: true
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/workspace
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    # Start OVS and keep container running
+    command: /bin/bash -c "mkdir -p /var/run/openvswitch /var/log/openvswitch && (ovs-vsctl show > /dev/null 2>&1 || (ovsdb-server --detach --pidfile=/var/run/openvswitch/ovsdb-server.pid --remote=punix:/var/run/openvswitch/db.sock --log-file=/var/log/openvswitch/ovsdb-server.log && sleep 2 && ovs-vswitchd --detach --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --log-file=/var/log/openvswitch/ovs-vswitchd.log && sleep 2)) && tail -f /dev/null"
+
