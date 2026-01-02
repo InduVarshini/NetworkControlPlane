@@ -40,7 +40,7 @@ Control Plane Interface (CLI / UI)
 - Mininet (install via: `sudo apt-get install mininet` on Linux)
 - Network tools: ping, traceroute (usually pre-installed)
 
-**Note for macOS users:** Mininet requires Linux kernel features. See [QUICKSTART_DOCKER.md](QUICKSTART_DOCKER.md) for Docker setup (recommended) or [MACOS_SETUP.md](MACOS_SETUP.md) for other options.
+**Note for macOS users:** Mininet requires Linux kernel features. See [DOCKER_SETUP.md](DOCKER_SETUP.md) for Docker setup (recommended) or [MACOS_SETUP.md](MACOS_SETUP.md) for other options.
 
 ### Installation
 
@@ -122,7 +122,7 @@ docker run -it --rm --privileged \
   /bin/bash
 ```
 
-See [QUICKSTART_DOCKER.md](QUICKSTART_DOCKER.md) for detailed Docker instructions.
+See [DOCKER_SETUP.md](DOCKER_SETUP.md) for detailed Docker instructions.
 
 ### Example Workflow
 
