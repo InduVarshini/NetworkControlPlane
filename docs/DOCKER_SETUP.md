@@ -41,10 +41,10 @@ python3 -m network_control_plane.cli deploy examples/topology.yaml
 
 ```bash
 # Make script executable (if needed)
-chmod +x network_control_plane/docker-run.sh
+chmod +x scripts/docker-run.sh
 
 # Run the script
-./network_control_plane/docker-run.sh
+./scripts/docker-run.sh
 ```
 
 ## Prerequisites
